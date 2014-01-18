@@ -1,0 +1,62 @@
+<project name="AppEngineExample" default="usage" basedir=".">
+
+	<description>Build Script to build the AppEngineExample Project</description>
+	<property file="build.properties" />
+
+	<path id="app.classpath">
+		<fileset dir="${web.webinf}/lib" includes="*.jar" />
+		<fileset dir="${tomcat.home}/lib" includes="servlet-api.jar" />
+	</path>
+
+	<target name="usage">
+		<echo>
+			Usage: ant [clean|compile|jar|war|deploy]
+			clean   -- deletes the compiled classes and jar files
+			compile -- compile all project files
+			jar     -- builds jar files
+			war     -- builds pridikt prelaunch app war files
+			deploy  -- deploys the application to tomcat
+    	</echo>
+	</target>
+
+	<target name="clean" description="deletes bytecode for clean build">
+		<delete dir="${dist}" />
+	</target>
+
+	<target name="compile" description="compiles project files to dist/classes">
+		<mkdir dir="${javac.dest}" />
+		<javac srcdir="${java.source.dir}" destdir="${javac.dest}" includes="**/*.java" classpathref="app.classpath" includeantruntime="false" debug="${debug}" />
+	</target>
+
+	<target name="jar" depends="compile" description="jars the project files">
+		<mkdir dir="${jar.dest}" />
+		<jar jarfile="${jar.dest}/${app.name}.jar" basedir="${javac.dest}" includes="**/*.class" />
+	</target>
+
+
+	<target name="war" depends="jar" description="builds the application war file">
+		<war destfile="${jar.dest}/${app.name}.war" webxml="${web.webinf}/web.xml">
+
+			<fileset dir="${web.home}">
+				<include name="**/*.*" />
+			</fileset>
+
+			<lib dir="${jar.dest}" includes="**/*.jar" />
+			<lib dir="${web.webinf}/lib" includes="*.jar" />
+		</war>
+	</target>
+
+	<!-- Target to clean the Tomcat -->
+	<target name="tomcat-clean" description="deletes the expanded directory structure in tomcat
+                     webapps and work\Standalone\localhost folders">
+		<delete dir="${tomcat.webapps}/${app.name}" />
+		<delete dir="${tomcat.work}/${app.name}" />
+	</target>
+
+
+	<!-- Deploys the Application to Tomcat -->
+	<target name="deploy" depends="war, tomcat-clean">
+		<copy file="${jar.dest}/${app.name}.war" tofile="${tomcat.webapps}/${app.name}.war" />
+	</target>	
+
+</project>
